@@ -15,6 +15,7 @@ extern "C" {
 
 
 static uint32_t g_buffer[WIDTH * HEIGHT];
+static bool g_alt_background = false;
 
 int main() {
   struct mfb_window *window =
@@ -35,11 +36,19 @@ int main() {
 
   // Set up char input callback for textbox input
   mfb_set_char_input_callback(
-      [](struct mfb_window *w, unsigned int c) {
-        extern void ui_bridge_char_input(struct mfb_window *, unsigned int);
-        ui_bridge_char_input(w, c);
-      },
-      window);
+    [](struct mfb_window *w, unsigned int c) {
+      extern void ui_bridge_char_input(struct mfb_window *, unsigned int);
+
+      if (c == 'b' || c == 'B') {
+        g_alt_background = !g_alt_background;
+        printf("Background effect toggled: %s\n",
+               g_alt_background ? "ON" : "OFF");
+        return; // consume the event
+      }
+
+      ui_bridge_char_input(w, c); // pass other keys to the UI normally
+    },
+    window);
 
   while (mfb_update_events(window) != MFB_STATE_EXIT) {
     // 1. Input
@@ -55,9 +64,17 @@ int main() {
 
       int grid = ((x / 40) + (y / 40)) % 2;
 
-      uint8_t r = (uint8_t)(20 + 60 * nx + (grid ? 18 : 0));
-      uint8_t g = (uint8_t)(35 + 90 * ny + (grid ? 25 : 0));
-      uint8_t b = (uint8_t)(70 + 100 * (1.0f - nx) + (grid ? 30 : 0));
+      uint8_t r, g, b;
+
+      if (g_alt_background) {
+        r = (uint8_t)(90 + 100 * ny + (grid ? 35 : 0));
+        g = (uint8_t)(25 + 70 * (1.0f - nx) + (grid ? 20 : 0));
+        b = (uint8_t)(120 + 80 * nx + (grid ? 25 : 0));
+      } else {
+        r = (uint8_t)(20 + 60 * nx + (grid ? 18 : 0));
+        g = (uint8_t)(35 + 90 * ny + (grid ? 25 : 0));
+        b = (uint8_t)(70 + 100 * (1.0f - nx) + (grid ? 30 : 0));
+      }
 
       g_buffer[i] = MFB_RGB(r, g, b);
     }

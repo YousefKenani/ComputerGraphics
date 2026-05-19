@@ -78,3 +78,55 @@ The button also prints a message to the console when clicked.
 # Notes
 
 This task helped me understand that in Immediate Mode UI, widgets are declared every frame, while persistent state must be stored externally.
+
+
+# Task 3 – Real-Time Input Handling and Visual Effects
+
+## Goal
+The goal of this task was to intercept keyboard input using the MiniFB character input callback and dynamically modify the application's visual appearance in real time.
+
+## Implementation
+Inside `nanorender/src/main.cpp`, I added a global boolean variable to store the current background mode:
+
+```cpp
+static bool g_alt_background = false;
+```
+
+Then I modified the `mfb_set_char_input_callback` function to detect when the user presses the `B` key.
+
+```cpp
+if (c == 'b' || c == 'B') {
+  g_alt_background = !g_alt_background;
+  printf("Background effect toggled: %s\n",
+         g_alt_background ? "ON" : "OFF");
+  return;
+}
+```
+
+When the `B` key is pressed, the callback toggles the background state variable and consumes the event so it is not forwarded to the UI system.
+
+Inside the framebuffer rendering loop, I used the value of `g_alt_background` to switch between two different color schemes:
+
+```cpp
+if (g_alt_background) {
+  r = (uint8_t)(90 + 100 * ny + (grid ? 35 : 0));
+  g = (uint8_t)(25 + 70 * (1.0f - nx) + (grid ? 20 : 0));
+  b = (uint8_t)(120 + 80 * nx + (grid ? 25 : 0));
+} else {
+  r = (uint8_t)(20 + 60 * nx + (grid ? 18 : 0));
+  g = (uint8_t)(35 + 90 * ny + (grid ? 25 : 0));
+  b = (uint8_t)(70 + 100 * (1.0f - nx) + (grid ? 30 : 0));
+}
+```
+
+This creates a real-time visual effect that changes instantly when the user presses the keyboard shortcut.
+
+## Result
+
+Pressing the `B` key dynamically toggles between two different framebuffer background styles while the application is running.
+
+![Task 3 Result](./assets/task3_background_toggle.png)
+
+## Notes
+
+This task helped me understand how callbacks are used to capture operating system input events and synchronize them with the rendering loop. It also demonstrated how Immediate Mode applications manage interaction state externally.
