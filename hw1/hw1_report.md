@@ -186,3 +186,84 @@ This task helped me understand how rendering systems and input systems can opera
 ## Demo
 
 ![Task 4 Demo](./assets/task4_demo.gif)
+
+
+# Task 5 – Binding UI Widgets to Application State
+
+## Goal
+The goal of this task was to create custom application state variables and bind them to Immediate Mode UI widgets so that interacting with the UI dynamically changes the framebuffer background in real time.
+
+## Implementation
+Inside `nanorender/src/main.cpp`, I created several custom state variables:
+
+```cpp
+static float pattern_intensity = 40.0f;
+static float color_shift = 60.0f;
+static int enable_grid = 1;
+```
+
+These variables are stored externally in the application and passed into MicroUI widgets using memory pointers.
+
+I then created new sliders and a checkbox inside the `mu_begin_window` block:
+
+```cpp
+mu_slider(ctx, &pattern_intensity, 0, 80);
+mu_slider(ctx, &color_shift, 20, 140);
+mu_checkbox(ctx, "Enable grid pattern", &enable_grid);
+```
+
+The widgets directly modify these variables while the application is running.
+
+Next, I connected the variables to the framebuffer rendering loop.  
+The `pattern_intensity` variable controls the size of the grid cells:
+
+```cpp
+int cell_size = (int)(20 + pattern_intensity);
+```
+
+The `color_shift` variable affects the color intensity of the background pattern, while `enable_grid` toggles the grid effect on and off.
+
+This allows the visual pattern to change dynamically based on user interaction.
+
+## Results
+
+Moving the sliders and toggling the checkbox immediately changes the appearance of the framebuffer background in real time.
+
+- `Pattern intensity` changes the grid size.
+- `Color shift` changes the strength of the colors.
+- `Enable grid pattern` turns the pattern on and off.
+
+### Pattern Intensity
+
+Low intensity:
+
+![Low Intensity](./assets/task5_intensity_low.png)
+
+High intensity:
+
+![High Intensity](./assets/task5_intensity_high.png)
+
+---
+
+### Color Shift
+
+High color shift:
+
+![Color Shift](./assets/task5_color_shift.png)
+
+---
+
+### Grid Toggle
+
+Grid disabled:
+
+![Grid Disabled](./assets/task5_grid_off.png)
+
+
+## Explanation
+
+This task demonstrates how Immediate Mode UI systems manage interaction state externally. The widgets themselves do not store any internal data. Instead, they directly modify variables stored in the application through memory pointers.
+
+## Notes
+
+This task helped me better understand how UI widgets can be connected directly to rendering logic through shared application state variables.

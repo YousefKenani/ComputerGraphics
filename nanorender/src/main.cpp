@@ -17,6 +17,11 @@ extern "C" {
 static uint32_t g_buffer[WIDTH * HEIGHT];
 static bool g_alt_background = false;
 
+static float pattern_intensity = 40.0f;
+static float color_shift = 60.0f;
+static int enable_grid = 1;
+
+
 int main() {
   struct mfb_window *window =
     mfb_open_ex("MiniGUI Platform", WIDTH, HEIGHT, 0);
@@ -62,18 +67,19 @@ int main() {
       float nx = (float)x / WIDTH;
       float ny = (float)y / HEIGHT;
 
-      int grid = ((x / 40) + (y / 40)) % 2;
+      int cell_size = (int)(20 + pattern_intensity);
+      int grid = enable_grid ? (((x / cell_size) + (y / cell_size)) % 2) : 0;
 
       uint8_t r, g, b;
 
       if (g_alt_background) {
-        r = (uint8_t)(90 + 100 * ny + (grid ? 35 : 0));
-        g = (uint8_t)(25 + 70 * (1.0f - nx) + (grid ? 20 : 0));
-        b = (uint8_t)(120 + 80 * nx + (grid ? 25 : 0));
+        r = (uint8_t)(90 + color_shift * ny + (grid ? 35 : 0));
+        g = (uint8_t)(25 + color_shift * (1.0f - nx) + (grid ? 20 : 0));
+        b = (uint8_t)(120 + color_shift * nx + (grid ? 25 : 0));
       } else {
-        r = (uint8_t)(20 + 60 * nx + (grid ? 18 : 0));
-        g = (uint8_t)(35 + 90 * ny + (grid ? 25 : 0));
-        b = (uint8_t)(70 + 100 * (1.0f - nx) + (grid ? 30 : 0));
+        r = (uint8_t)(20 + color_shift * nx + (grid ? 18 : 0));
+        g = (uint8_t)(35 + color_shift * ny + (grid ? 25 : 0));
+        b = (uint8_t)(70 + color_shift * (1.0f - nx) + (grid ? 30 : 0));
       }
 
       g_buffer[i] = MFB_RGB(r, g, b);
@@ -118,6 +124,21 @@ int main() {
         mu_layout_row(ctx, 1, w1, 0);
         mu_label(ctx, "Task 2 message is now visible!");
       }
+
+      // Task 5 controls: bind UI widgets to background state
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Task 5: Background Controls");
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Pattern intensity:");
+      mu_slider(ctx, &pattern_intensity, 0, 80);
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Color shift:");
+      mu_slider(ctx, &color_shift, 20, 140);
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_checkbox(ctx, "Enable grid pattern", &enable_grid);
 
       // checkbox
       mu_layout_row(ctx, 1, w1, 0);
