@@ -1,3 +1,4 @@
+#include <math.h>
 #include "MiniFB.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -45,12 +46,18 @@ int main() {
 
     // 2. Scene Rendering (Background)
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
-      // Simple gradient background
       int x = i % WIDTH;
       int y = i / WIDTH;
-      uint8_t r = (uint8_t)((float)x / WIDTH * 128) + 32;
-      uint8_t g = (uint8_t)((float)y / HEIGHT * 128) + 32;
-      uint8_t b = 64;
+
+      float nx = (float)x / WIDTH;
+      float ny = (float)y / HEIGHT;
+
+      int grid = ((x / 40) + (y / 40)) % 2;
+
+      uint8_t r = (uint8_t)(20 + 60 * nx + (grid ? 18 : 0));
+      uint8_t g = (uint8_t)(35 + 90 * ny + (grid ? 25 : 0));
+      uint8_t b = (uint8_t)(70 + 100 * (1.0f - nx) + (grid ? 30 : 0));
+
       g_buffer[i] = MFB_RGB(r, g, b);
     }
 
