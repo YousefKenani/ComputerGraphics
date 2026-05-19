@@ -159,10 +159,18 @@ void UIRenderer::draw_text(const char* text, mu_Vec2 pos, mu_Color color) {
 }
 
 void UIRenderer::draw_pixel(int x, int y, uint32_t c) {
-    if (x < m_clip_rect.x || x >= m_clip_rect.x + m_clip_rect.w) return;
-    if (y < m_clip_rect.y || y >= m_clip_rect.y + m_clip_rect.h) return;
-    if (x < 0 || x >= m_width || y < 0 || y >= m_height) return;
-    m_buffer[y * m_width + x] = c;
+    // Task 4: visual rendering offset.
+    // The UI is drawn at shifted coordinates, but MicroUI still
+    // calculates interaction using the original positions.
+
+    int visual_x = x + 40;
+    int visual_y = y + 25;
+
+    if (visual_x < m_clip_rect.x || visual_x >= m_clip_rect.x + m_clip_rect.w) return;
+    if (visual_y < m_clip_rect.y || visual_y >= m_clip_rect.y + m_clip_rect.h) return;
+    if (visual_x < 0 || visual_x >= m_width || visual_y < 0 || visual_y >= m_height) return;
+
+    m_buffer[visual_y * m_width + visual_x] = c;
 }
 
 void UIRenderer::draw_line(int x0, int y0, int x1, int y1, uint32_t c) {
