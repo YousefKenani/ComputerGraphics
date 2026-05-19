@@ -182,3 +182,7 @@ This task demonstrated the architectural separation between:
 ## Notes
 
 This task helped me understand how rendering systems and input systems can operate independently inside a graphics/UI framework.
+
+## Demo
+
+![Task 4 Demo](./assets/task4_demo.gif)
