@@ -130,3 +130,55 @@ Pressing the `B` key dynamically toggles between two different framebuffer backg
 ## Notes
 
 This task helped me understand how callbacks are used to capture operating system input events and synchronize them with the rendering loop. It also demonstrated how Immediate Mode applications manage interaction state externally.
+
+
+# Task 4 – UI Renderer Transformation and Interaction Offset
+
+## Goal
+The goal of this task was to modify the rendering layer of the UI system and demonstrate the separation between logical UI interaction and visual rendering.
+
+## Implementation
+Inside `nanorender/src/ui_renderer.cpp`, I modified the `draw_pixel` function to apply a visual offset before writing pixels into the framebuffer.
+
+Originally, pixels were drawn directly using the original coordinates:
+
+```cpp
+m_buffer[y * m_width + x] = c;
+```
+
+I changed the rendering coordinates by introducing an offset:
+
+```cpp
+int visual_x = x + 40;
+int visual_y = y + 25;
+```
+
+Then I used these shifted coordinates when writing to the framebuffer:
+
+```cpp
+m_buffer[visual_y * m_width + visual_x] = c;
+```
+
+This transformation shifts the entire rendered UI 40 pixels to the right and 25 pixels downward.
+
+## Result
+
+The UI is visually displayed in a shifted position on the screen. However, the clickable interaction areas remain at their original logical positions.
+
+As a result:
+- Clicking directly on the visible button no longer works correctly.
+- To successfully activate a button, the mouse cursor must be placed approximately 40 pixels left and 25 pixels above the visible rendered button.
+
+![Task 4 Result](./assets/task4_ui_offset.png)
+
+## Explanation
+
+This behavior occurs because MicroUI calculates input handling and widget hitboxes independently from the renderer. The renderer only controls how the UI is visually drawn to the framebuffer, while the interaction system still uses the original unshifted coordinates.
+
+This task demonstrated the architectural separation between:
+- UI state and interaction logic
+- low-level visual rendering
+
+## Notes
+
+This task helped me understand how rendering systems and input systems can operate independently inside a graphics/UI framework.
