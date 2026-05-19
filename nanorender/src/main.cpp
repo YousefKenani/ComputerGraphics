@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <vector>
 #include <math.h>
 #include "MiniFB.h"
 #include <stdint.h>
@@ -21,8 +23,90 @@ static float pattern_intensity = 40.0f;
 static float color_shift = 60.0f;
 static int enable_grid = 1;
 
+struct Line {
+  int x0, y0, x1, y1;
+  uint32_t color;
+};
+
+static std::vector<Line> g_lines;
+static bool g_is_drawing = false;
+static int g_start_x = 0;
+static int g_start_y = 0;
+static int g_preview_x = 0;
+static int g_preview_y = 0;
+static int g_eraser_mode = 0;
+
+static void draw_line_to_buffer(int x0, int y0, int x1, int y1, uint32_t color) {
+  int dx = abs(x1 - x0);
+  int sx = x0 < x1 ? 1 : -1;
+  int dy = -abs(y1 - y0);
+  int sy = y0 < y1 ? 1 : -1;
+  int err = dx + dy;
+
+  while (true) {
+    if (x0 >= 0 && x0 < WIDTH && y0 >= 0 && y0 < HEIGHT) {
+      g_buffer[y0 * WIDTH + x0] = color;
+    }
+
+    if (x0 == x1 && y0 == y1) break;
+
+    int e2 = 2 * err;
+    if (e2 >= dy) {
+      err += dy;
+      x0 += sx;
+    }
+    if (e2 <= dx) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+
+static float distance_to_line(int px, int py, const Line& line) {
+  float ax = line.x0;
+  float ay = line.y0;
+  float bx = line.x1;
+  float by = line.y1;
+
+  float dx = bx - ax;
+  float dy = by - ay;
+
+  float length_sq = dx * dx + dy * dy;
+  if (length_sq == 0) {
+    float ex = px - ax;
+    float ey = py - ay;
+    return sqrtf(ex * ex + ey * ey);
+  }
+
+  float t = ((px - ax) * dx + (py - ay) * dy) / length_sq;
+  t = std::max(0.0f, std::min(1.0f, t));
+
+  float closest_x = ax + t * dx;
+  float closest_y = ay + t * dy;
+
+  float ex = px - closest_x;
+  float ey = py - closest_y;
+
+  return sqrtf(ex * ex + ey * ey);
+}
+
+static void erase_lines_near_point(int x, int y) {
+  const float erase_radius = 15.0f;
+
+  g_lines.erase(
+      std::remove_if(g_lines.begin(), g_lines.end(),
+                     [x, y, erase_radius](const Line& line) {
+                        return distance_to_line(x, y, line) < erase_radius;
+                      }),
+      g_lines.end());
+}
+
 
 int main() {
+  static float line_r = 255.0f;
+  static float line_g = 255.0f;
+  static float line_b = 255.0f;
+
   struct mfb_window *window =
     mfb_open_ex("MiniGUI Platform", WIDTH, HEIGHT, 0);
   if (!window)
@@ -59,6 +143,39 @@ int main() {
     // 1. Input
     ui_bridge_input(ctx, window);
 
+    uint32_t current_line_color =
+    MFB_RGB((uint8_t)line_r, (uint8_t)line_g, (uint8_t)line_b);
+
+    bool mouse_down = ctx->mouse_down == MU_MOUSE_LEFT;
+    int mouse_x = ctx->mouse_pos.x;
+    int mouse_y = ctx->mouse_pos.y;
+
+    // Avoid drawing when mouse is over the UI panel
+    bool mouse_over_ui = mouse_x < 420 && mouse_y < 620;
+
+    if (!mouse_over_ui) {
+      if (g_eraser_mode) {
+        if (mouse_down) {
+          erase_lines_near_point(mouse_x, mouse_y);
+        }
+        g_is_drawing = false;
+      } else {
+        if (mouse_down && !g_is_drawing) {
+          g_is_drawing = true;
+          g_start_x = mouse_x;
+          g_start_y = mouse_y;
+          g_preview_x = mouse_x;
+          g_preview_y = mouse_y;
+        } else if (mouse_down && g_is_drawing) {
+          g_preview_x = mouse_x;
+          g_preview_y = mouse_y;
+        } else if (!mouse_down && g_is_drawing) {
+          g_lines.push_back({g_start_x, g_start_y, g_preview_x, g_preview_y, current_line_color});
+          g_is_drawing = false;
+        }
+      }
+    }
+
     // 2. Scene Rendering (Background)
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
       int x = i % WIDTH;
@@ -83,6 +200,14 @@ int main() {
       }
 
       g_buffer[i] = MFB_RGB(r, g, b);
+    }
+
+    for (const Line& line : g_lines) {
+      draw_line_to_buffer(line.x0, line.y0, line.x1, line.y1, line.color);
+    }
+
+    if (g_is_drawing) {
+      draw_line_to_buffer(g_start_x, g_start_y, g_preview_x, g_preview_y, current_line_color);
     }
 
     // 3. UI Logic
@@ -139,6 +264,39 @@ int main() {
 
       mu_layout_row(ctx, 1, w1, 0);
       mu_checkbox(ctx, "Enable grid pattern", &enable_grid);
+
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Task 6: Line Drawing");
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Line Red:");
+      mu_slider(ctx, &line_r, 0, 255);
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Line Green:");
+      mu_slider(ctx, &line_g, 0, 255);
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Line Blue:");
+      mu_slider(ctx, &line_b, 0, 255);
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_label(ctx, "Current line color:");
+
+      mu_Rect color_preview_rect = mu_layout_next(ctx);
+      mu_draw_rect(ctx, color_preview_rect,
+                  mu_color((int)line_r, (int)line_g, (int)line_b, 255));
+
+      mu_layout_row(ctx, 1, w1, 0);
+      mu_checkbox(ctx, "Eraser mode", &g_eraser_mode);
+
+      mu_layout_row(ctx, 1, w1, 0);
+      if (mu_button(ctx, "Clear Lines")) {
+        g_lines.clear();
+      }
+
+      
 
       // checkbox
       mu_layout_row(ctx, 1, w1, 0);

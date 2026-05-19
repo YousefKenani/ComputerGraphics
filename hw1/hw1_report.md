@@ -267,3 +267,209 @@ This task demonstrates how Immediate Mode UI systems manage interaction state ex
 ## Notes
 
 This task helped me better understand how UI widgets can be connected directly to rendering logic through shared application state variables.
+
+
+# Task 6 – Interactive Line Drawing Application
+
+## Goal
+The goal of this task was to implement Bresenham’s Line Algorithm and combine it with Immediate Mode UI concepts to create an interactive drawing application.
+
+The application allows the user to:
+- Draw multiple permanent lines interactively.
+- Preview lines before finalizing them.
+- Change the RGB color of the current line.
+- Erase existing lines.
+- Clear the entire canvas.
+
+## UX Planning and Design Choice
+
+Before implementing the interaction logic, I considered several possible drawing approaches:
+
+### Option 1 – Two Separate Mouse Clicks
+- First click sets the start point.
+- Second click sets the end point.
+
+**Pros**
+- Simple logic.
+- Easy to implement.
+
+**Cons**
+- Feels less natural.
+- Harder to preview the final line direction.
+
+---
+
+### Option 2 – Click, Drag, Release (Chosen Approach)
+- Mouse press sets the start point.
+- Dragging previews the line dynamically.
+- Mouse release permanently stores the line.
+
+**Pros**
+- Feels intuitive and responsive.
+- Allows real-time visual feedback.
+- Similar to real drawing software.
+
+**Cons**
+- Requires temporary preview state management.
+
+I selected the click-and-drag approach because it provides a smoother and more interactive user experience.
+
+---
+
+## Bresenham Line Implementation
+
+Inside `nanorender/src/main.cpp`, I implemented a custom Bresenham-style line drawing function:
+
+```cpp
+static void draw_line_to_buffer(int x0, int y0,
+                                int x1, int y1,
+                                uint32_t color)
+```
+
+The function calculates line pixels using integer-based incremental error correction and writes the resulting pixels directly into the framebuffer:
+
+```cpp
+g_buffer[y0 * WIDTH + x0] = color;
+```
+
+The implementation supports lines in all directions and slopes.
+
+---
+
+## Interactive Drawing System
+
+I created a `Line` structure to permanently store drawn lines:
+
+```cpp
+struct Line {
+  int x0, y0, x1, y1;
+  uint32_t color;
+};
+```
+
+All lines are stored in:
+
+```cpp
+static std::vector<Line> g_lines;
+```
+
+The mouse interaction system uses MicroUI mouse state variables:
+
+```cpp
+ctx->mouse_pos.x
+ctx->mouse_pos.y
+ctx->mouse_down
+```
+
+### Drawing Workflow
+- Press mouse → start line.
+- Drag mouse → preview line.
+- Release mouse → save permanent line.
+
+A temporary preview line is displayed while dragging.
+
+---
+
+## UI Features
+
+### RGB Line Color Controls
+
+I added three sliders for controlling the current line color:
+
+```cpp
+mu_slider(ctx, &line_r, 0, 255);
+mu_slider(ctx, &line_g, 0, 255);
+mu_slider(ctx, &line_b, 0, 255);
+```
+
+These values are combined into:
+
+```cpp
+MFB_RGB((uint8_t)line_r,
+        (uint8_t)line_g,
+        (uint8_t)line_b);
+```
+
+---
+
+### Live Color Preview
+
+A color preview rectangle displays the currently selected drawing color:
+
+```cpp
+mu_draw_rect(...)
+```
+
+This allows the user to immediately see the active line color before drawing.
+
+---
+
+### Eraser Tool
+
+I implemented an eraser mode using:
+
+```cpp
+mu_checkbox(ctx, "Eraser mode", &g_eraser_mode);
+```
+
+When enabled:
+- Dragging the mouse removes nearby lines.
+- The eraser uses geometric distance checks between the cursor and existing line segments.
+
+---
+
+### Clear Screen Button
+
+I added a button to clear all saved lines:
+
+```cpp
+if (mu_button(ctx, "Clear Lines")) {
+  g_lines.clear();
+}
+```
+
+---
+
+## Result
+
+The final application functions as a small interactive line drawing tool.
+
+Features include:
+- Real-time line preview.
+- Permanent line storage.
+- Adjustable RGB colors.
+- Color preview panel.
+- Eraser mode.
+- Canvas clearing.
+
+### Drawing Demo
+
+![Drawing Demo](./assets/task6_drawing_demo.png)
+
+### RGB Color Controls
+
+![RGB Controls](./assets/task6_rgb_controls.png)
+
+### Eraser Mode
+
+![Eraser Mode](./assets/task6_eraser.png)
+
+
+---
+
+## Explanation
+
+This task demonstrated how low-level framebuffer rendering, Bresenham line rasterization, mouse input handling, and Immediate Mode UI systems can be combined into a complete interactive graphics application.
+
+The project also highlighted how application state is managed externally and continuously updated through the rendering loop.
+
+---
+
+## Notes
+
+This was the most advanced part of the assignment and helped me better understand:
+- raster graphics algorithms,
+- framebuffer manipulation,
+- UI-driven rendering pipelines,
+- interactive application architecture,
+- and state management in Immediate Mode GUIs.
