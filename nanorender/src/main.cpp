@@ -87,6 +87,20 @@ int main() {
         quit_requested = false; // just a reaction
       }
 
+      // Task 2 custom widget
+      static bool show_message = false;
+
+      mu_layout_row(ctx, 1, w1, 0);
+      if (mu_button(ctx, "Toggle Task 2 Message")) {
+        show_message = !show_message;
+        printf("Task 2 button clicked!\n");
+      }
+
+      if (show_message) {
+        mu_layout_row(ctx, 1, w1, 0);
+        mu_label(ctx, "Task 2 message is now visible!");
+      }
+
       // checkbox
       mu_layout_row(ctx, 1, w1, 0);
       mu_checkbox(ctx, "mu_checkbox A (off)", &checkbox_a);
