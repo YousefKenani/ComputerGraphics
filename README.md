@@ -1,8 +1,8 @@
 # Computer Graphics 2026 - Course Portfolio
 
 **Student Information**
-* **Name:** [Your Name Here]
-* **Student ID:** [Your ID Here]
+* **Name:** Youssif Kenani
+* **Student ID:** 212345532
 
 ## Academic Integrity & Workflow Agreement
 
@@ -65,8 +65,7 @@ To keep the repository clean and the reports professional, follow these standard
 
 ## Table of Contents
 | Assignment | Link |
-| :--- | :--- |
-| **Project 1: My First Project** | [View Folder](./MyFirstProject/) |
+| **HW1** | [View Folder](./hw1/) |
 
 ---
 *Note: Please ensure all internal links remain functional as you add new folders.*

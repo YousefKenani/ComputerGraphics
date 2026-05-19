@@ -57,7 +57,7 @@ Open PowerShell and run the following commands to install the necessary dependen
 * **Installation**:
 
   ```
-  winget install Ninja-build.Ninja
+  brew install ninja
   ```
 
 * **Setup**: The installation should automatically add Ninja to your system's PATH. If it doesn't, you may need to add it manually or place the executable in your project directory.
