@@ -44,3 +44,37 @@ The final result is a dark neon-style background rendered directly into the fram
 ## Notes
 
 This task helped me better understand how a framebuffer works as a one-dimensional array and how 2D pixel coordinates can be transformed into color values for rendering graphical patterns.
+
+
+# Task 2 – Immediate Mode UI Widget
+
+## Goal
+The goal of this task was to add a new interactive MicroUI widget and demonstrate how Immediate Mode UI uses external state.
+
+## Implementation
+Inside `nanorender/src/main.cpp`, I added a new button inside the `mu_begin(ctx)` UI block. The button toggles a static boolean variable and prints a message to the console when clicked.
+
+```cpp
+static bool show_message = false;
+
+mu_layout_row(ctx, 1, w1, 0);
+if (mu_button(ctx, "Toggle Task 2 Message")) {
+  show_message = !show_message;
+  printf("Task 2 button clicked!\n");
+}
+
+if (show_message) {
+  mu_layout_row(ctx, 1, w1, 0);
+  mu_label(ctx, "Task 2 message is now visible!");
+}
+```
+# Result
+
+Clicking the button toggles a text label inside the MicroUI window.
+The button also prints a message to the console when clicked.
+
+![Task 2 Result](./assets/task2_widget.png)
+
+# Notes
+
+This task helped me understand that in Immediate Mode UI, widgets are declared every frame, while persistent state must be stored externally.
