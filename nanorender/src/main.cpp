@@ -13,11 +13,12 @@ extern "C" {
 #define WIDTH 1600
 #define HEIGHT 1200
 
+
 static uint32_t g_buffer[WIDTH * HEIGHT];
 
 int main() {
   struct mfb_window *window =
-      mfb_open_ex("MiniGUI Platform", WIDTH, HEIGHT, MFB_WF_RESIZABLE);
+    mfb_open_ex("MiniGUI Platform", WIDTH, HEIGHT, 0);
   if (!window)
     return 1;
 
